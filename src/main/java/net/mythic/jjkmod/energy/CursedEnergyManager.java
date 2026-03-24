@@ -10,6 +10,7 @@ public class CursedEnergyManager {
 
     public static final int DEFAULT_MAX_ENERGY = 500;
     public static final int DEFAULT_ENERGY = 500;
+    public static final int DEFAULT_CURSED_ENERGY_REGENERATION_RATE = 20;
 
     private static final Map<UUID, int[]> PLAYER_ENERGY = new HashMap<>();
 
