@@ -16,7 +16,6 @@ public class JJKMod implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	private static int syncTickCounter = 0;
-	private static final int SYNC_INTERVAL = 20;
 
 	@Override
 	public void onInitialize() {
@@ -39,7 +38,7 @@ public class JJKMod implements ModInitializer {
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			syncTickCounter++;
-			if (syncTickCounter >= SYNC_INTERVAL) {
+			if (syncTickCounter >= CursedEnergyManager.DEFAULT_CURSED_ENERGY_REGENERATION_RATE) {
 				syncTickCounter = 0;
 				for (var player : server.getPlayerManager().getPlayerList()) {
 					CursedEnergyManager.regenerate(player, 1);
