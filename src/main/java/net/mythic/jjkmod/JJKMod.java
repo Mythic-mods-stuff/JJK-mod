@@ -1,8 +1,10 @@
 package net.mythic.jjkmod;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.mythic.jjkmod.command.TestCECommand;
 import net.mythic.jjkmod.energy.CursedEnergyManager;
 import net.mythic.jjkmod.networking.ModNetworking;
 import org.slf4j.Logger;
@@ -21,6 +23,10 @@ public class JJKMod implements ModInitializer {
 		LOGGER.info("Initializing JJK Mod - Cursed Energy System");
 
 		ModNetworking.registerS2CPayloads();
+
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+			TestCECommand.register(dispatcher);
+		});
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			CursedEnergyManager.initialize(handler.getPlayer());
