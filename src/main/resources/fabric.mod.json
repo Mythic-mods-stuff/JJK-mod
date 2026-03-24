@@ -18,6 +18,9 @@
 		"main": [
 			"net.mythic.jjkmod.JJKMod"
 		],
+		"client": [
+			"net.mythic.jjkmod.JJKModClient"
+		],
 		"fabric-datagen": [
 			"net.mythic.jjkmod.JJKModDataGenerator"
 		]
