@@ -1,16 +1,66 @@
 package net.mythic.jjkmod.energy;
 
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.PersistentState;
+import net.minecraft.world.PersistentStateManager;
+import net.minecraft.world.World;
+import net.minecraft.registry.RegistryWrapper;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class CursedEnergyManager {
-
+public class CursedEnergyManager extends PersistentState {
     public static final int DEFAULT_MAX_ENERGY = 500;
     public static final int DEFAULT_ENERGY = 500;
     public static final int DEFAULT_CURSED_ENERGY_REGENERATION_RATE = 1;
+
+    // Player data: [currentEnergy, maxEnergy]
+    private final Map<UUID, int[]> playerEnergy = new HashMap<>();
+    // Character selection storage
+    private final Map<UUID, String> playerCharacters = new HashMap<>();
+
+    public CursedEnergyManager() {
+        super();
+    }
+
+    // ============ PERSISTENT STATE METHODS ============
+
+    @Override
+    public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
+        NbtCompound charactersNbt = new NbtCompound();
+        for (Map.Entry<UUID, String> entry : playerCharacters.entrySet()) {
+            charactersNbt.putString(entry.getKey().toString(), entry.getValue());
+        }
+        nbt.put(\"characters\", charactersNbt);
+        return nbt;
+    }
+
+    public static CursedEnergyManager createFromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
+        CursedEnergyManager manager = new CursedEnergyManager();
+        NbtCompound charactersNbt = nbt.getCompound(\"characters\");
+        for (String key : charactersNbt.getKeys()) {
+            manager.playerCharacters.put(UUID.fromString(key), charactersNbt.getString(key));
+        }
+        return manager;
+    }
+
+    private static Type<CursedEnergyManager> type = new Type<>(
+            CursedEnergyManager::new,
+            CursedEnergyManager::createFromNbt,
+            null
+    );
+
+    public static CursedEnergyManager getServerState(MinecraftServer server) {
+        PersistentStateManager manager = server.getWorld(World.OVERWORLD).getPersistentStateManager();
+        CursedEnergyManager state = manager.getOrCreate(type, \"jjkmod_data\");
+                state.markDirty();
+        return state;
+    }
+
+    // ============ ENERGY METHODS (now instance-based for persistence) ============
 
     private static final Map<UUID, int[]> PLAYER_ENERGY = new HashMap<>();
 
@@ -63,5 +113,23 @@ public class CursedEnergyManager {
 
     public static void remove(ServerPlayerEntity player) {
         PLAYER_ENERGY.remove(player.getUuid());
+    }
+
+    // ============ CHARACTER METHODS ============
+
+    public static boolean hasSelectedCharacter(ServerPlayerEntity player) {
+        CursedEnergyManager state = getServerState(player.getServer());
+        return state.playerCharacters.containsKey(player.getUuid());
+    }
+
+    public static String getSelectedCharacter(ServerPlayerEntity player) {
+        CursedEnergyManager state = getServerState(player.getServer());
+        return state.playerCharacters.get(player.getUuid());
+    }
+
+    public static void setSelectedCharacter(ServerPlayerEntity player, String character) {
+        CursedEnergyManager state = getServerState(player.getServer());
+        state.playerCharacters.put(player.getUuid(), character);
+        state.markDirty();
     }
 }

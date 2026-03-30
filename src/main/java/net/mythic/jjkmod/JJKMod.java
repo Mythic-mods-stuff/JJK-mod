@@ -11,38 +11,43 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JJKMod implements ModInitializer {
-	public static final String MOD_ID = "jjk-mod";
-
+	public static final String MOD_ID = \"jjk-mod\";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	private static int syncTickCounter = 0;
 
 	@Override
 	public void onInitialize() {
-		LOGGER.info("Initializing JJK Mod - Cursed Energy System");
+		LOGGER.info(\"Initializing JJK Mod\");
 
-		ModNetworking.registerS2CPayloads();
+				// Register networking
+				ModNetworking.registerPayloads();
+		ModNetworking.registerServerReceivers();
 
+		// Register commands
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 			TestCECommand.register(dispatcher);
 		});
 
+		// Player join - initialize and sync
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			CursedEnergyManager.initialize(handler.getPlayer());
-			ModNetworking.syncCursedEnergy(handler.getPlayer());
+			ModNetworking.syncToClient(handler.getPlayer());
 		});
 
+		// Player disconnect
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			CursedEnergyManager.remove(handler.getPlayer());
 		});
 
+		// Tick for CE regeneration
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			syncTickCounter++;
 			if (syncTickCounter >= CursedEnergyManager.DEFAULT_CURSED_ENERGY_REGENERATION_RATE) {
 				syncTickCounter = 0;
 				for (var player : server.getPlayerManager().getPlayerList()) {
 					CursedEnergyManager.regenerate(player, 1);
-					ModNetworking.syncCursedEnergy(player);
+					ModNetworking.syncToClient(player);
 				}
 			}
 		});
