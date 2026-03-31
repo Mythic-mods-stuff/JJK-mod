@@ -2,7 +2,8 @@ package net.mythic.jjkmod.character;
 
 public enum JJKCharacter {
     NONE("none", "None", "No character selected"),
-    SUKUNA("sukuna", "Ryomen Sukuna", "The King of Curses");
+    SUKUNA("sukuna", "Ryomen Sukuna", "The King of Curses"),
+    GOJO("gojo", "Satoru Gojo", "The Strongest Sorcerer");
 
     private final String id;
     private final String displayName;

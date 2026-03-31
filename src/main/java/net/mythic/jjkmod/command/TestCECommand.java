@@ -8,6 +8,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.mythic.jjkmod.character.CharacterSelectionManager;
 import net.mythic.jjkmod.character.JJKCharacter;
+import net.mythic.jjkmod.character.JJKGrade;
 import net.mythic.jjkmod.energy.CursedEnergyManager;
 import net.mythic.jjkmod.networking.ModNetworking;
 
@@ -58,12 +59,27 @@ public class TestCECommand {
                                         );
                                     } else {
                                         String name = character.getDisplayName();
+                                        JJKGrade grade = CharacterSelectionManager.getGrade(player, character);
+                                        String gradeStr = grade != null ? grade.getDisplayName() : "No grade";
                                         source.sendFeedback(
-                                                () -> Text.literal("\u00a76Selected character: \u00a7e" + name),
+                                                () -> Text.literal("\u00a76Selected: \u00a7e" + name
+                                                        + " \u00a77| \u00a7bGrade: \u00a7a" + gradeStr),
                                                 false
                                         );
                                     }
 
+                                    return 1;
+                                })
+                        )
+                        .then(CommandManager.literal("switchCharacter")
+                                .executes(context -> {
+                                    ServerCommandSource source = context.getSource();
+                                    ServerPlayerEntity player = source.getPlayerOrThrow();
+                                    ModNetworking.sendOpenCharacterSelection(player);
+                                    source.sendFeedback(
+                                            () -> Text.literal("\u00a7aOpening character selection..."),
+                                            false
+                                    );
                                     return 1;
                                 })
                         )

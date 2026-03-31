@@ -10,8 +10,8 @@ import net.mythic.jjkmod.networking.CharacterSelectedC2SPayload;
 
 public class CharacterSelectionScreen extends Screen {
 
-    private static final int PANEL_WIDTH = 280;
-    private static final int PANEL_HEIGHT = 200;
+    private static final int PANEL_WIDTH = 300;
+    private static final int PANEL_HEIGHT = 255;
 
     // JJK themed colours
     private static final int BG_COLOR        = 0xE0101020;   // Dark navy, semi-transparent
@@ -36,11 +36,19 @@ public class CharacterSelectionScreen extends Screen {
         int panelLeft = centerX - PANEL_WIDTH / 2;
         int panelTop  = centerY - PANEL_HEIGHT / 2;
 
+        int buttonWidth = PANEL_WIDTH - 80;
+
         // Sukuna selection button
         this.addDrawableChild(ButtonWidget.builder(
                 Text.literal("\u2620 Ryomen Sukuna \u2620"),
                 button -> selectCharacter(JJKCharacter.SUKUNA)
-        ).dimensions(panelLeft + 40, panelTop + 120, PANEL_WIDTH - 80, 20).build());
+        ).dimensions(panelLeft + 40, panelTop + 100, buttonWidth, 20).build());
+
+        // Gojo selection button
+        this.addDrawableChild(ButtonWidget.builder(
+                Text.literal("\u2728 Satoru Gojo \u2728"),
+                button -> selectCharacter(JJKCharacter.GOJO)
+        ).dimensions(panelLeft + 40, panelTop + 190, buttonWidth, 20).build());
     }
 
     private void selectCharacter(JJKCharacter character) {
@@ -89,36 +97,49 @@ public class CharacterSelectionScreen extends Screen {
 
         // Title
         context.drawCenteredTextWithShadow(this.textRenderer, this.title,
-                centerX, panelTop + 15, TITLE_COLOR);
+                centerX, panelTop + 12, TITLE_COLOR);
 
         // Subtitle
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("Select a Jujutsu sorcerer to begin"),
-                centerX, panelTop + 30, SUBTITLE_COLOR);
+                centerX, panelTop + 27, SUBTITLE_COLOR);
 
         // Separator
-        context.fill(panelLeft + 20, panelTop + 48, panelRight - 20, panelTop + 49, SEPARATOR_COLOR);
+        context.fill(panelLeft + 20, panelTop + 44, panelRight - 20, panelTop + 45, SEPARATOR_COLOR);
 
-        // Character info
+        // ── Sukuna section ──
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("Ryomen Sukuna"),
-                centerX, panelTop + 60, CHAR_NAME_COLOR);
+                centerX, panelTop + 55, CHAR_NAME_COLOR);
 
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("The King of Curses"),
-                centerX, panelTop + 75, CHAR_DESC_COLOR);
+                centerX, panelTop + 68, CHAR_DESC_COLOR);
 
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("Cleave \u2022 Dismantle \u2022 Malevolent Shrine"),
-                centerX, panelTop + 90, CHAR_DESC_COLOR);
+                centerX, panelTop + 81, CHAR_DESC_COLOR);
 
-        // Separator before button
-        context.fill(panelLeft + 20, panelTop + 108, panelRight - 20, panelTop + 109, SEPARATOR_COLOR);
+        // Separator between characters
+        context.fill(panelLeft + 40, panelTop + 128, panelRight - 40, panelTop + 129, SEPARATOR_COLOR);
+
+        // ── Gojo section ──
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("Satoru Gojo"),
+                centerX, panelTop + 140, CHAR_NAME_COLOR);
+
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("The Strongest Sorcerer"),
+                centerX, panelTop + 153, CHAR_DESC_COLOR);
+
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.literal("Infinity \u2022 Blue \u2022 Red \u2022 Hollow Purple"),
+                centerX, panelTop + 166, CHAR_DESC_COLOR);
 
         // Footer
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("More characters coming soon..."),
-                centerX, panelTop + 160, 0xFF555555);
+                centerX, panelTop + PANEL_HEIGHT - 18, 0xFF555555);
 
         // Render widgets (buttons)
         super.render(context, mouseX, mouseY, delta);
