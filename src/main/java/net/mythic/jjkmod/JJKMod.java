@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.mythic.jjkmod.character.CharacterSelectionManager;
+import net.mythic.jjkmod.character.GradeStatsManager;
 import net.mythic.jjkmod.character.JJKCharacter;
 import net.mythic.jjkmod.character.JJKGrade;
 import net.mythic.jjkmod.command.TestCECommand;
@@ -38,7 +39,7 @@ public class JJKMod implements ModInitializer {
 		ModNetworking.registerS2CPayloads();
 		ModNetworking.registerC2SPayloads();
 
-		// Handle character selection — auto-assign Grade 4 when first picking
+		// Handle character selection — auto-assign Grade 4, apply stats
 		ServerPlayNetworking.registerGlobalReceiver(CharacterSelectedC2SPayload.ID, (payload, context) -> {
 			var player = context.player();
 			player.server.execute(() -> {
@@ -46,17 +47,19 @@ public class JJKMod implements ModInitializer {
 				if (character != JJKCharacter.NONE) {
 					CharacterSelectionManager.setSelectedCharacter(player, character);
 
-					// Auto-assign Grade 4 if this is the first time with this character
+					// Auto-assign Grade 4 if first time with this character
 					if (!CharacterSelectionManager.hasGrade(player, character)) {
 						CharacterSelectionManager.setGrade(player, character, JJKGrade.GRADE_4);
-						LOGGER.info("Player {} selected character: {} (assigned Grade 4)",
-								player.getName().getString(), character.getDisplayName());
-					} else {
-						LOGGER.info("Player {} switched to character: {} (Grade: {})",
-								player.getName().getString(),
-								character.getDisplayName(),
-								CharacterSelectionManager.getGrade(player, character).getDisplayName());
 					}
+
+					// Apply grade stats (CE + HP) for the active character
+					JJKGrade grade = CharacterSelectionManager.getGrade(player, character);
+					GradeStatsManager.applyGradeStats(player, grade);
+
+					LOGGER.info("Player {} selected character: {} ({})",
+							player.getName().getString(),
+							character.getDisplayName(),
+							grade.getDisplayName());
 				}
 			});
 		});
@@ -69,6 +72,7 @@ public class JJKMod implements ModInitializer {
 				JJKGrade grade = JJKGrade.fromId(payload.gradeId());
 				if (character != JJKCharacter.NONE && grade != null) {
 					CharacterSelectionManager.setGrade(player, character, grade);
+					GradeStatsManager.applyGradeStats(player, grade);
 					LOGGER.info("Player {} set grade for {}: {}",
 							player.getName().getString(),
 							character.getDisplayName(),
@@ -83,20 +87,27 @@ public class JJKMod implements ModInitializer {
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			CursedEnergyManager.initialize(handler.getPlayer());
-			ModNetworking.syncCursedEnergy(handler.getPlayer());
 
 			if (!CharacterSelectionManager.hasSelected(handler.getPlayer())) {
+				// New player — open character selection
+				ModNetworking.syncCursedEnergy(handler.getPlayer());
 				ModNetworking.sendOpenCharacterSelection(handler.getPlayer());
 			} else {
-				// Player reconnected — ensure they have a grade
-				JJKCharacter current = CharacterSelectionManager.getSelectedCharacter(handler.getPlayer());
-				if (!CharacterSelectionManager.hasGrade(handler.getPlayer(), current)) {
-					CharacterSelectionManager.setGrade(handler.getPlayer(), current, JJKGrade.GRADE_4);
+				// Returning player — re-apply grade stats
+				var player = handler.getPlayer();
+				JJKCharacter current = CharacterSelectionManager.getSelectedCharacter(player);
+
+				if (!CharacterSelectionManager.hasGrade(player, current)) {
+					CharacterSelectionManager.setGrade(player, current, JJKGrade.GRADE_4);
 				}
+
+				JJKGrade grade = CharacterSelectionManager.getGrade(player, current);
+				GradeStatsManager.applyGradeStats(player, grade);
 			}
 		});
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			GradeStatsManager.removeGradeStats(handler.getPlayer());
 			CursedEnergyManager.remove(handler.getPlayer());
 		});
 

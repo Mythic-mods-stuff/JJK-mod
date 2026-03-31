@@ -11,6 +11,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
 import net.mythic.jjkmod.character.CharacterSelectionManager;
+import net.mythic.jjkmod.character.GradeStatsManager;
 import net.mythic.jjkmod.character.JJKCharacter;
 import net.mythic.jjkmod.character.JJKGrade;
 
@@ -50,8 +51,13 @@ public class PromoterItem extends Item {
             // Promote!
             CharacterSelectionManager.setGrade(serverPlayer, character, nextGrade);
 
+            // Apply new grade stats (CE + HP)
+            GradeStatsManager.applyGradeStats(serverPlayer, nextGrade);
+
             serverPlayer.sendMessage(
-                    Text.literal("\u00a7a\u00a7lPromoted to " + nextGrade.getDisplayName() + "!"),
+                    Text.literal("\u00a7a\u00a7lPromoted to " + nextGrade.getDisplayName() + "!"
+                            + " \u00a77(CE: " + nextGrade.getMaxCE()
+                            + " | HP: " + nextGrade.getMaxHP() + ")"),
                     true);
 
             // Play level-up sound
