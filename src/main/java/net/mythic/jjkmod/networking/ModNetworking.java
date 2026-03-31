@@ -10,10 +10,12 @@ public class ModNetworking {
     public static void registerS2CPayloads() {
         PayloadTypeRegistry.playS2C().register(CursedEnergySyncS2CPayload.ID, CursedEnergySyncS2CPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(OpenCharacterSelectionS2CPayload.ID, OpenCharacterSelectionS2CPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(OpenGradeSelectionS2CPayload.ID, OpenGradeSelectionS2CPayload.CODEC);
     }
 
     public static void registerC2SPayloads() {
         PayloadTypeRegistry.playC2S().register(CharacterSelectedC2SPayload.ID, CharacterSelectedC2SPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(GradeSelectedC2SPayload.ID, GradeSelectedC2SPayload.CODEC);
     }
 
     public static void syncCursedEnergy(ServerPlayerEntity player) {
@@ -24,5 +26,9 @@ public class ModNetworking {
 
     public static void sendOpenCharacterSelection(ServerPlayerEntity player) {
         ServerPlayNetworking.send(player, new OpenCharacterSelectionS2CPayload());
+    }
+
+    public static void sendOpenGradeSelection(ServerPlayerEntity player, String characterName) {
+        ServerPlayNetworking.send(player, new OpenGradeSelectionS2CPayload(characterName));
     }
 }

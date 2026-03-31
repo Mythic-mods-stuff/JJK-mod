@@ -6,8 +6,10 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.mythic.jjkmod.client.ClientCursedEnergyData;
 import net.mythic.jjkmod.client.CursedEnergyHudOverlay;
 import net.mythic.jjkmod.client.screen.CharacterSelectionScreen;
+import net.mythic.jjkmod.client.screen.GradeSelectionScreen;
 import net.mythic.jjkmod.networking.CursedEnergySyncS2CPayload;
 import net.mythic.jjkmod.networking.OpenCharacterSelectionS2CPayload;
+import net.mythic.jjkmod.networking.OpenGradeSelectionS2CPayload;
 
 public class JJKModClient implements ClientModInitializer {
     @Override
@@ -23,6 +25,13 @@ public class JJKModClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(OpenCharacterSelectionS2CPayload.ID, (payload, context) -> {
             context.client().execute(() -> {
                 context.client().setScreen(new CharacterSelectionScreen());
+            });
+        });
+
+        // Open grade selection screen when the server requests it
+        ClientPlayNetworking.registerGlobalReceiver(OpenGradeSelectionS2CPayload.ID, (payload, context) -> {
+            context.client().execute(() -> {
+                context.client().setScreen(new GradeSelectionScreen(payload.characterName()));
             });
         });
 

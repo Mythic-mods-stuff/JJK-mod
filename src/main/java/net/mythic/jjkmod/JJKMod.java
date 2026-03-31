@@ -8,9 +8,11 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.mythic.jjkmod.character.CharacterSelectionManager;
 import net.mythic.jjkmod.character.JJKCharacter;
+import net.mythic.jjkmod.character.JJKGrade;
 import net.mythic.jjkmod.command.TestCECommand;
 import net.mythic.jjkmod.energy.CursedEnergyManager;
 import net.mythic.jjkmod.networking.CharacterSelectedC2SPayload;
+import net.mythic.jjkmod.networking.GradeSelectedC2SPayload;
 import net.mythic.jjkmod.networking.ModNetworking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +41,28 @@ public class JJKMod implements ModInitializer {
 					CharacterSelectionManager.setSelectedCharacter(player, character);
 					LOGGER.info("Player {} selected character: {}",
 							player.getName().getString(), character.getDisplayName());
+
+					// If the player doesn't have a grade for this character yet,
+					// open the grade selection screen
+					if (!CharacterSelectionManager.hasGrade(player, character)) {
+						ModNetworking.sendOpenGradeSelection(player, character.getDisplayName());
+					}
+				}
+			});
+		});
+
+		// Handle grade selection packets from clients
+		ServerPlayNetworking.registerGlobalReceiver(GradeSelectedC2SPayload.ID, (payload, context) -> {
+			var player = context.player();
+			player.server.execute(() -> {
+				JJKCharacter character = CharacterSelectionManager.getSelectedCharacter(player);
+				JJKGrade grade = JJKGrade.fromId(payload.gradeId());
+				if (character != JJKCharacter.NONE && grade != null) {
+					CharacterSelectionManager.setGrade(player, character, grade);
+					LOGGER.info("Player {} set grade for {}: {}",
+							player.getName().getString(),
+							character.getDisplayName(),
+							grade.getDisplayName());
 				}
 			});
 		});
@@ -51,9 +75,16 @@ public class JJKMod implements ModInitializer {
 			CursedEnergyManager.initialize(handler.getPlayer());
 			ModNetworking.syncCursedEnergy(handler.getPlayer());
 
-			// If the player hasn't selected a character yet in this world, open the menu
+			// If the player hasn't selected a character yet, open character menu
 			if (!CharacterSelectionManager.hasSelected(handler.getPlayer())) {
 				ModNetworking.sendOpenCharacterSelection(handler.getPlayer());
+			} else {
+				// Player has a character — check if they still need a grade
+				// (e.g. disconnected during grade selection)
+				JJKCharacter current = CharacterSelectionManager.getSelectedCharacter(handler.getPlayer());
+				if (!CharacterSelectionManager.hasGrade(handler.getPlayer(), current)) {
+					ModNetworking.sendOpenGradeSelection(handler.getPlayer(), current.getDisplayName());
+				}
 			}
 		});
 
@@ -63,11 +94,11 @@ public class JJKMod implements ModInitializer {
 			// reconnecting players keep their selection within the same world.
 		});
 
-		// When the server/world stops, wipe all character selections so the menu
-		// re-opens the next time a player joins a (new) world.
+		// When the server/world stops, wipe all selections and grades so
+		// everything resets for the next world.
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 			CharacterSelectionManager.clearAll();
-			LOGGER.info("Server stopping - cleared all character selections");
+			LOGGER.info("Server stopping - cleared all character selections and grades");
 		});
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
