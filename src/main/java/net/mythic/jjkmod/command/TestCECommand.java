@@ -6,6 +6,8 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import net.mythic.jjkmod.character.CharacterSelectionManager;
+import net.mythic.jjkmod.character.JJKCharacter;
 import net.mythic.jjkmod.energy.CursedEnergyManager;
 import net.mythic.jjkmod.networking.ModNetworking;
 
@@ -42,6 +44,28 @@ public class TestCECommand {
                                                 })
                                         )
                                 )
+                        )
+                        .then(CommandManager.literal("showselectedCharacter")
+                                .executes(context -> {
+                                    ServerCommandSource source = context.getSource();
+                                    ServerPlayerEntity player = source.getPlayerOrThrow();
+                                    JJKCharacter character = CharacterSelectionManager.getSelectedCharacter(player);
+
+                                    if (character == JJKCharacter.NONE) {
+                                        source.sendFeedback(
+                                                () -> Text.literal("\u00a7cNo character selected yet!"),
+                                                false
+                                        );
+                                    } else {
+                                        String name = character.getDisplayName();
+                                        source.sendFeedback(
+                                                () -> Text.literal("\u00a76Selected character: \u00a7e" + name),
+                                                false
+                                        );
+                                    }
+
+                                    return 1;
+                                })
                         )
         );
     }
