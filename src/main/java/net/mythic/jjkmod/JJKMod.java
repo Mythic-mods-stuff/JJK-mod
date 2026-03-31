@@ -2,7 +2,6 @@ package net.mythic.jjkmod;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -59,15 +58,9 @@ public class JJKMod implements ModInitializer {
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			CursedEnergyManager.remove(handler.getPlayer());
-			// Note: CharacterSelectionManager data is intentionally kept so
-			// reconnecting players keep their selection within the same world.
-		});
-
-		// When the server/world stops, wipe all character selections so the menu
-		// re-opens the next time a player joins a (new) world.
-		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-			CharacterSelectionManager.clearAll();
-			LOGGER.info("Server stopping - cleared all character selections");
+			// Note: CharacterSelectionManager data is intentionally kept for the
+			// server session so reconnecting players keep their selection.
+			// It resets automatically when the server/world restarts.
 		});
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
