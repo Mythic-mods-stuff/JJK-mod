@@ -1,15 +1,15 @@
 {
 	"schemaVersion": 1,
 	"id": "jjk-mod",
-	"version": "${version}",
+	"version": "0.0.1",
 	"name": "JJK mod",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "This is a mod inspired by the Jujutsu Kaisen Anime",
 	"authors": [
-		"Me!"
+		"Mythic"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "None",
+		"sources": "https://github.com/Mythic-mods-stuff/JJK-mod/"
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/jjk-mod/icon.png",
