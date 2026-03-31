@@ -16,7 +16,7 @@ public class TestCECommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(
-                CommandManager.literal("test")
+                CommandManager.literal("jjktest")
                         .then(CommandManager.literal("CE")
                                 .then(CommandManager.argument("amount", IntegerArgumentType.integer(1))
                                         .then(CommandManager.literal("deplete")
