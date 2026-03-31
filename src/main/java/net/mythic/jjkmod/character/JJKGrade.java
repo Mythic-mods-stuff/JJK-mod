@@ -20,23 +20,25 @@ public enum JJKGrade {
         this.level = level;
     }
 
-    public String getId() {
-        return id;
-    }
+    public String getId() { return id; }
+    public String getDisplayName() { return displayName; }
+    public int getLevel() { return level; }
 
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public int getLevel() {
-        return level;
+    /**
+     * Returns the next higher grade, or {@code null} if already Special Grade.
+     */
+    public JJKGrade getNext() {
+        JJKGrade[] grades = values();
+        int nextIndex = this.ordinal() + 1;
+        if (nextIndex >= grades.length) {
+            return null;
+        }
+        return grades[nextIndex];
     }
 
     public static JJKGrade fromId(String id) {
         for (JJKGrade grade : values()) {
-            if (grade.id.equals(id)) {
-                return grade;
-            }
+            if (grade.id.equals(id)) return grade;
         }
         return null;
     }

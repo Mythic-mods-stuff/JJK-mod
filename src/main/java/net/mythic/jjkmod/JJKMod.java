@@ -11,6 +11,8 @@ import net.mythic.jjkmod.character.JJKCharacter;
 import net.mythic.jjkmod.character.JJKGrade;
 import net.mythic.jjkmod.command.TestCECommand;
 import net.mythic.jjkmod.energy.CursedEnergyManager;
+import net.mythic.jjkmod.item.ModItemGroups;
+import net.mythic.jjkmod.item.ModItems;
 import net.mythic.jjkmod.networking.CharacterSelectedC2SPayload;
 import net.mythic.jjkmod.networking.GradeSelectedC2SPayload;
 import net.mythic.jjkmod.networking.ModNetworking;
@@ -28,30 +30,38 @@ public class JJKMod implements ModInitializer {
 	public void onInitialize() {
 		LOGGER.info("Initializing JJK Mod - Cursed Energy System");
 
+		// Register items and creative tab
+		ModItems.initialize();
+		ModItemGroups.initialize();
+
 		// Register network payloads (S2C and C2S)
 		ModNetworking.registerS2CPayloads();
 		ModNetworking.registerC2SPayloads();
 
-		// Handle character selection packets from clients
+		// Handle character selection — auto-assign Grade 4 when first picking
 		ServerPlayNetworking.registerGlobalReceiver(CharacterSelectedC2SPayload.ID, (payload, context) -> {
 			var player = context.player();
 			player.server.execute(() -> {
 				JJKCharacter character = JJKCharacter.fromId(payload.characterId());
 				if (character != JJKCharacter.NONE) {
 					CharacterSelectionManager.setSelectedCharacter(player, character);
-					LOGGER.info("Player {} selected character: {}",
-							player.getName().getString(), character.getDisplayName());
 
-					// If the player doesn't have a grade for this character yet,
-					// open the grade selection screen
+					// Auto-assign Grade 4 if this is the first time with this character
 					if (!CharacterSelectionManager.hasGrade(player, character)) {
-						ModNetworking.sendOpenGradeSelection(player, character.getDisplayName());
+						CharacterSelectionManager.setGrade(player, character, JJKGrade.GRADE_4);
+						LOGGER.info("Player {} selected character: {} (assigned Grade 4)",
+								player.getName().getString(), character.getDisplayName());
+					} else {
+						LOGGER.info("Player {} switched to character: {} (Grade: {})",
+								player.getName().getString(),
+								character.getDisplayName(),
+								CharacterSelectionManager.getGrade(player, character).getDisplayName());
 					}
 				}
 			});
 		});
 
-		// Handle grade selection packets from clients
+		// Keep the grade C2S handler registered (for potential future use)
 		ServerPlayNetworking.registerGlobalReceiver(GradeSelectedC2SPayload.ID, (payload, context) -> {
 			var player = context.player();
 			player.server.execute(() -> {
@@ -75,27 +85,21 @@ public class JJKMod implements ModInitializer {
 			CursedEnergyManager.initialize(handler.getPlayer());
 			ModNetworking.syncCursedEnergy(handler.getPlayer());
 
-			// If the player hasn't selected a character yet, open character menu
 			if (!CharacterSelectionManager.hasSelected(handler.getPlayer())) {
 				ModNetworking.sendOpenCharacterSelection(handler.getPlayer());
 			} else {
-				// Player has a character — check if they still need a grade
-				// (e.g. disconnected during grade selection)
+				// Player reconnected — ensure they have a grade
 				JJKCharacter current = CharacterSelectionManager.getSelectedCharacter(handler.getPlayer());
 				if (!CharacterSelectionManager.hasGrade(handler.getPlayer(), current)) {
-					ModNetworking.sendOpenGradeSelection(handler.getPlayer(), current.getDisplayName());
+					CharacterSelectionManager.setGrade(handler.getPlayer(), current, JJKGrade.GRADE_4);
 				}
 			}
 		});
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
 			CursedEnergyManager.remove(handler.getPlayer());
-			// Note: CharacterSelectionManager data is intentionally kept so
-			// reconnecting players keep their selection within the same world.
 		});
 
-		// When the server/world stops, wipe all selections and grades so
-		// everything resets for the next world.
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 			CharacterSelectionManager.clearAll();
 			LOGGER.info("Server stopping - cleared all character selections and grades");
