@@ -2,6 +2,7 @@ package net.mythic.jjkmod;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -103,6 +104,18 @@ public class JJKMod implements ModInitializer {
 
 				JJKGrade grade = CharacterSelectionManager.getGrade(player, current);
 				GradeStatsManager.applyGradeStats(player, grade);
+			}
+		});
+
+		// Re-apply grade stats after respawn (death creates a new player entity,
+		// so the temporary health attribute modifier is lost)
+		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+			if (CharacterSelectionManager.hasSelected(newPlayer)) {
+				JJKCharacter character = CharacterSelectionManager.getSelectedCharacter(newPlayer);
+				JJKGrade grade = CharacterSelectionManager.getGrade(newPlayer, character);
+				if (grade != null) {
+					GradeStatsManager.applyGradeStats(newPlayer, grade);
+				}
 			}
 		});
 
