@@ -5,6 +5,10 @@
 	"mixins": [
 		"ExampleMixin"
 	],
+	"client": [
+		"MouseScrollMixin",
+		"HotbarKeyMixin"
+	],
 	"injectors": {
 		"defaultRequire": 1
 	},

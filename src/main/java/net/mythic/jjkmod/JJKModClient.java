@@ -68,8 +68,8 @@ public class JJKModClient implements ClientModInitializer {
                 }
             }
 
-            // Lock vanilla hotbar slot while in combat mode
-            // (prevents scroll wheel and number keys from changing it)
+            // Safety net: lock vanilla hotbar slot while in combat mode
+            // (Mixins handle the actual input blocking, this catches edge cases)
             if (CombatModeManager.isActive() && client.player != null) {
                 client.player.getInventory().selectedSlot = CombatModeManager.getSavedSlot();
             }
