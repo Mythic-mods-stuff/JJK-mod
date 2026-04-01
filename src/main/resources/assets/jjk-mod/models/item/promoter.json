@@ -1,6 +1,6 @@
 {
     "parent": "minecraft:item/generated",
     "textures": {
-        "layer0": "jjk-mod:item/promoter"
+        "layer0": "jjk-mod:item/promoter_new_new_new"
     }
 }
