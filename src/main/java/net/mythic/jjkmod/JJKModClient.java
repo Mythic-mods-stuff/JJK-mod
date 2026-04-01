@@ -55,10 +55,23 @@ public class JJKModClient implements ClientModInitializer {
         HudRenderCallback.EVENT.register(CursedEnergyHudOverlay::render);
         HudRenderCallback.EVENT.register(CombatModeHud::render);
 
-        // ── Key handler (toggle combat mode on R press) ────────────────
+        // ── Key handler + hotbar lock ──────────────────────────────────
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            // Toggle combat mode on R press (only when not in a screen)
             while (combatModeKey.wasPressed()) {
-                CombatModeManager.toggle();
+                if (client.player != null && client.currentScreen == null) {
+                    if (!CombatModeManager.isActive()) {
+                        // Save current hotbar slot before entering combat mode
+                        CombatModeManager.setSavedSlot(client.player.getInventory().selectedSlot);
+                    }
+                    CombatModeManager.toggle();
+                }
+            }
+
+            // Lock vanilla hotbar slot while in combat mode
+            // (prevents scroll wheel and number keys from changing it)
+            if (CombatModeManager.isActive() && client.player != null) {
+                client.player.getInventory().selectedSlot = CombatModeManager.getSavedSlot();
             }
         });
     }
