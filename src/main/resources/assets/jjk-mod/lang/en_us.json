@@ -1,4 +1,6 @@
 {
     "item.jjk-mod.promoter": "Promoter",
-    "itemGroup.jjk-mod.jjk_group": "JJK Mod"
+    "itemGroup.jjk-mod.jjk_group": "JJK Mod",
+    "key.jjk-mod.combat_mode": "Toggle Combat Mode",
+    "category.jjk-mod.keys": "JJK Mod"
 }
