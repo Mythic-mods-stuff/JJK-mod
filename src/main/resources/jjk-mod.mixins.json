@@ -7,7 +7,8 @@
 	],
 	"client": [
 		"MouseScrollMixin",
-		"HotbarKeyMixin"
+		"HotbarKeyMixin",
+		"InGameHudMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
