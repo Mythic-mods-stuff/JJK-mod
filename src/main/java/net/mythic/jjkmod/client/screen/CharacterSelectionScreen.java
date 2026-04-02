@@ -6,6 +6,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 import net.mythic.jjkmod.character.JJKCharacter;
+import net.mythic.jjkmod.client.ClientCharacterData;
 import net.mythic.jjkmod.networking.CharacterSelectedC2SPayload;
 
 public class CharacterSelectionScreen extends Screen {
@@ -52,6 +53,8 @@ public class CharacterSelectionScreen extends Screen {
     }
 
     private void selectCharacter(JJKCharacter character) {
+        // Store selection on the client for HUD rendering
+        ClientCharacterData.set(character);
         ClientPlayNetworking.send(new CharacterSelectedC2SPayload(character.getId()));
         this.close();
     }
