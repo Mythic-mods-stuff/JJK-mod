@@ -19,13 +19,13 @@ import net.mythic.jjkmod.client.combat.CombatModeManager;
  *   <li><b>Gojo</b> — "Unlimited Void" domain expansion pose</li>
  * </ul>
  *
- * Animations are loaded from {@code assets/jjk-mod/player_animations/} by
+ * Animations are loaded from {@code assets/jjk-mod/player_animation/} by
  * the PlayerAnimator resource loader.
  */
 public class DomainExpansionHandler {
 
     private static final Identifier DOMAIN_ANIM_ID =
-            Identifier.of("jjk-mod", "domain_expansion");
+            Identifier.of("jjk-mod", "gojo_domain_expansion_opening");
 
     /**
      * Attempts to trigger the domain expansion animation.
