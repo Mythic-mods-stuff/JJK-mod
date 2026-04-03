@@ -10,9 +10,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * Hides the vanilla hotbar and experience bar when combat mode is active.
- * The combat HUD replaces them entirely and renders on top of the
- * remaining vanilla elements (hearts, hunger, armor).
+ * Hides vanilla HUD elements when combat mode is active.
+ *
+ * <ul>
+ *   <li>{@code renderHotbar} — replaced by the custom combat bar</li>
+ *   <li>{@code renderExperienceBar} — the green XP progress bar</li>
+ *   <li>{@code renderExperienceLevel} — the level number text</li>
+ * </ul>
+ *
+ * The combat HUD itself renders on top of the remaining vanilla
+ * elements (hearts, hunger, armor) via {@code RenderLayer.getGuiOverlay()}.
  */
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
@@ -26,6 +33,13 @@ public class InGameHudMixin {
 
     @Inject(method = "renderExperienceBar", at = @At("HEAD"), cancellable = true)
     private void jjkmod$hideExperienceBar(DrawContext context, int x, CallbackInfo ci) {
+        if (CombatModeManager.isActive()) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "renderExperienceLevel", at = @At("HEAD"), cancellable = true)
+    private void jjkmod$hideExperienceLevel(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if (CombatModeManager.isActive()) {
             ci.cancel();
         }
