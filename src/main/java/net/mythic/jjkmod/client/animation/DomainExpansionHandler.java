@@ -1,5 +1,7 @@
 package net.mythic.jjkmod.client.animation;
 
+import dev.kosmx.playerAnim.api.firstPerson.FirstPersonConfiguration;
+import dev.kosmx.playerAnim.api.firstPerson.FirstPersonMode;
 import dev.kosmx.playerAnim.api.layered.KeyframeAnimationPlayer;
 import dev.kosmx.playerAnim.core.data.KeyframeAnimation;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationRegistry;
@@ -65,8 +67,17 @@ public class DomainExpansionHandler {
             return false;
         }
 
-        // Play the domain expansion animation
-        animContainer.setAnimation(new KeyframeAnimationPlayer(anim));
+        // Play the domain expansion animation with first-person support
+        KeyframeAnimationPlayer player = new KeyframeAnimationPlayer(anim);
+        player.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
+        player.setFirstPersonConfiguration(
+                new FirstPersonConfiguration()
+                        .setShowRightArm(true)
+                        .setShowLeftArm(true)
+                        .setShowRightItem(false)
+                        .setShowLeftItem(false)
+        );
+        animContainer.setAnimation(player);
         return true;
     }
 }
