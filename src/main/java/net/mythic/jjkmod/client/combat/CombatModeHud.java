@@ -42,15 +42,24 @@ public class CombatModeHud {
     public static void render(DrawContext ctx, RenderTickCounter tickCounter) {
         if (!CombatModeManager.isActive()) return;
 
+        // Push z forward so the combat bar renders on top of vanilla
+        // status bars (hearts, hunger, armor) rather than behind them.
+        ctx.getMatrices().push();
+        ctx.getMatrices().translate(0, 0, 200);
+
         // ── Dispatch to character-specific HUD ─────────────────────────
         if (ClientCharacterData.isGojo()) {
             GojoCombatHud.render(ctx);
+            ctx.getMatrices().pop();
             return;
         }
 
         // ── Default / Sukuna: Malevolent Shrine HUD ────────────────────
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null) return;
+        if (client.player == null) {
+            ctx.getMatrices().pop();
+            return;
+        }
 
         int screenW = client.getWindow().getScaledWidth();
         int screenH = client.getWindow().getScaledHeight();
@@ -123,6 +132,8 @@ public class CombatModeHud {
 
         // ── 9. Bottom teeth/bone fragments ────────────────────────────
         drawBottomTeeth(ctx, centerX, bodyBottom, botWidth);
+
+        ctx.getMatrices().pop();
     }
 
     private static void drawHorns(DrawContext ctx, int centerX, int roofY, int roofWidth) {
