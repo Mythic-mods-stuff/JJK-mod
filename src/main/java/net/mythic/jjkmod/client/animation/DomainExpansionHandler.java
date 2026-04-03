@@ -4,6 +4,7 @@ import dev.kosmx.playerAnim.api.layered.KeyframeAnimationPlayer;
 import dev.kosmx.playerAnim.core.data.KeyframeAnimation;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationRegistry;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.mythic.jjkmod.client.ClientCharacterData;
 import net.mythic.jjkmod.client.combat.CombatModeManager;
@@ -11,8 +12,8 @@ import net.mythic.jjkmod.client.combat.CombatModeManager;
 /**
  * Handles domain expansion activation for the current character.
  *
- * <p>When the player presses the domain expansion key (9) while in combat
- * mode, this handler plays the corresponding animation via PlayerAnimator.
+ * <p>Called from {@link net.mythic.jjkmod.mixin.HotbarKeyMixin} when
+ * the player presses hotbar key 9 while combat mode is active.
  *
  * <p>Currently supports:
  * <ul>
@@ -20,7 +21,7 @@ import net.mythic.jjkmod.client.combat.CombatModeManager;
  * </ul>
  *
  * Animations are loaded from {@code assets/jjk-mod/player_animation/} by
- * the PlayerAnimator resource loader.
+ * the Player Animator resource loader.
  */
 public class DomainExpansionHandler {
 
@@ -41,18 +42,31 @@ public class DomainExpansionHandler {
         if (!CombatModeManager.isActive()) return false;
 
         // Only Gojo has domain expansion for now
-        if (!ClientCharacterData.isGojo()) return false;
+        if (!ClientCharacterData.isGojo()) {
+            client.player.sendMessage(
+                    Text.literal("\u00A7c[JJK] Domain expansion requires Gojo (current: "
+                            + ClientCharacterData.get().getDisplayName() + ")"),
+                    true   // action bar (fades after ~2 s)
+            );
+            return false;
+        }
 
         // Get the player's animation layer
         var animContainer = ((IJJKAnimatedPlayer) client.player).jjkmod_getAnimationLayer();
 
         // Load the animation from resources
         KeyframeAnimation anim = PlayerAnimationRegistry.getAnimation(DOMAIN_ANIM_ID);
-        if (anim == null) return false;
+        if (anim == null) {
+            client.player.sendMessage(
+                    Text.literal("\u00A7c[JJK] Animation not found: " + DOMAIN_ANIM_ID
+                            + " — make sure Player Animator is installed"),
+                    true
+            );
+            return false;
+        }
 
         // Play the domain expansion animation
         animContainer.setAnimation(new KeyframeAnimationPlayer(anim));
-
         return true;
     }
 }

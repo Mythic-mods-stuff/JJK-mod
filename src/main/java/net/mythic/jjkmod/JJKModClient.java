@@ -9,7 +9,6 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.mythic.jjkmod.client.ClientCursedEnergyData;
 import net.mythic.jjkmod.client.CursedEnergyHudOverlay;
-import net.mythic.jjkmod.client.animation.DomainExpansionHandler;
 import net.mythic.jjkmod.client.combat.CombatModeHud;
 import net.mythic.jjkmod.client.combat.CombatModeManager;
 import net.mythic.jjkmod.client.screen.CharacterSelectionScreen;
@@ -22,7 +21,6 @@ import org.lwjgl.glfw.GLFW;
 public class JJKModClient implements ClientModInitializer {
 
     private static KeyBinding combatModeKey;
-    private static KeyBinding domainExpansionKey;
 
     @Override
     public void onInitializeClient() {
@@ -34,12 +32,8 @@ public class JJKModClient implements ClientModInitializer {
                 "category.jjk-mod.keys"
         ));
 
-        domainExpansionKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "key.jjk-mod.domain_expansion",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_9,
-                "category.jjk-mod.keys"
-        ));
+        // NOTE: Domain expansion (key 9) is handled directly in HotbarKeyMixin
+        // to avoid a key-binding conflict with the vanilla hotbar slot 9.
 
         // ── Network handlers ───────────────────────────────────────────
         ClientPlayNetworking.registerGlobalReceiver(CursedEnergySyncS2CPayload.ID, (payload, context) -> {
@@ -74,13 +68,6 @@ public class JJKModClient implements ClientModInitializer {
                         CombatModeManager.setSavedSlot(client.player.getInventory().selectedSlot);
                     }
                     CombatModeManager.toggle();
-                }
-            }
-
-            // Domain expansion on 9 press (only in combat mode)
-            while (domainExpansionKey.wasPressed()) {
-                if (client.player != null && client.currentScreen == null) {
-                    DomainExpansionHandler.trigger();
                 }
             }
 
