@@ -2,6 +2,7 @@ package net.mythic.jjkmod.client.combat;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.RenderTickCounter;
 import net.mythic.jjkmod.client.ClientCharacterData;
 
@@ -13,8 +14,15 @@ import net.mythic.jjkmod.client.ClientCharacterData;
  *   – Sukuna → Malevolent Shrine theme (crimson, horns, teeth)
  *   – Gojo   → Unlimited Void theme (blue, Six Eyes, no horns)
  *   – Default falls through to Sukuna style.
+ *
+ * All fill operations use {@link RenderLayer#getGuiOverlay()} so the
+ * combat bar always renders on top of vanilla HUD elements (hearts,
+ * hunger, armor) regardless of depth buffer state.
  */
 public class CombatModeHud {
+
+    // ── Render layer (no depth test → always on top) ────────────────────
+    private static final RenderLayer OVERLAY = RenderLayer.getGuiOverlay();
 
     // ── Shrine palette (Sukuna) ─────────────────────────────────────────
     private static final int SHRINE_BODY       = 0xFF1A0505;
@@ -42,24 +50,15 @@ public class CombatModeHud {
     public static void render(DrawContext ctx, RenderTickCounter tickCounter) {
         if (!CombatModeManager.isActive()) return;
 
-        // Push z forward so the combat bar renders on top of vanilla
-        // status bars (hearts, hunger, armor) rather than behind them.
-        ctx.getMatrices().push();
-        ctx.getMatrices().translate(0, 0, 200);
-
         // ── Dispatch to character-specific HUD ─────────────────────────
         if (ClientCharacterData.isGojo()) {
             GojoCombatHud.render(ctx);
-            ctx.getMatrices().pop();
             return;
         }
 
         // ── Default / Sukuna: Malevolent Shrine HUD ────────────────────
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null) {
-            ctx.getMatrices().pop();
-            return;
-        }
+        if (client.player == null) return;
 
         int screenW = client.getWindow().getScaledWidth();
         int screenH = client.getWindow().getScaledHeight();
@@ -78,12 +77,12 @@ public class CombatModeHud {
             int rx = centerX - rowWidth / 2;
             int ry = bodyTop + row;
 
-            ctx.fill(rx, ry, rx + rowWidth, ry + 1, SHRINE_BODY);
+            fill(ctx, rx, ry, rx + rowWidth, ry + 1, SHRINE_BODY);
 
             int edgeShade = 3;
             if (rowWidth > edgeShade * 2) {
-                ctx.fill(rx, ry, rx + edgeShade, ry + 1, SHRINE_DARK);
-                ctx.fill(rx + rowWidth - edgeShade, ry, rx + rowWidth, ry + 1, SHRINE_DARK);
+                fill(ctx, rx, ry, rx + edgeShade, ry + 1, SHRINE_DARK);
+                fill(ctx, rx + rowWidth - edgeShade, ry, rx + rowWidth, ry + 1, SHRINE_DARK);
             }
         }
 
@@ -102,8 +101,8 @@ public class CombatModeHud {
             int rowWidth = (int)(topWidth + (botWidth - topWidth) * t);
             int rx = centerX - rowWidth / 2;
             int ry = bodyTop + row;
-            ctx.fill(rx, ry, rx + 2, ry + 1, SHRINE_BORDER);
-            ctx.fill(rx + rowWidth - 2, ry, rx + rowWidth, ry + 1, SHRINE_BORDER);
+            fill(ctx, rx, ry, rx + 2, ry + 1, SHRINE_BORDER);
+            fill(ctx, rx + rowWidth - 2, ry, rx + rowWidth, ry + 1, SHRINE_BORDER);
         }
 
         // ── 5. Horn/spike decorations along top ridge ─────────────────
@@ -132,8 +131,6 @@ public class CombatModeHud {
 
         // ── 9. Bottom teeth/bone fragments ────────────────────────────
         drawBottomTeeth(ctx, centerX, bodyBottom, botWidth);
-
-        ctx.getMatrices().pop();
     }
 
     private static void drawHorns(DrawContext ctx, int centerX, int roofY, int roofWidth) {
@@ -154,7 +151,7 @@ public class CombatModeHud {
                 int hy = roofY - HORN_HEIGHT + row;
 
                 int color = rowT < 0.4f ? HORN_TIP : HORN_BASE;
-                ctx.fill(hx, hy, hx + width, hy + 1, color);
+                fill(ctx, hx, hy, hx + width, hy + 1, color);
             }
         }
     }
@@ -170,13 +167,13 @@ public class CombatModeHud {
 
             for (int row = 0; row < toothHeight; row++) {
                 int w = toothHeight - row;
-                ctx.fill(toothX - w / 2, bottomY + row, toothX + (w + 1) / 2, bottomY + row + 1, HORN_BASE);
+                fill(ctx, toothX - w / 2, bottomY + row, toothX + (w + 1) / 2, bottomY + row + 1, HORN_BASE);
             }
         }
     }
 
     private static void drawSlot(DrawContext ctx, int x, int y, int size) {
-        ctx.fill(x, y, x + size, y + size, SLOT_BG);
+        fill(ctx, x, y, x + size, y + size, SLOT_BG);
 
         drawRect(ctx, x, y, size, 1, SLOT_BORDER);
         drawRect(ctx, x, y + size - 1, size, 1, SLOT_BORDER);
@@ -186,11 +183,16 @@ public class CombatModeHud {
         drawRect(ctx, x + 1, y + 1, size - 2, 1, SLOT_HIGHLIGHT);
         drawRect(ctx, x + 1, y + 1, 1, size - 2, SLOT_HIGHLIGHT);
 
-        ctx.fill(x + 2, y + size - 2, x + size - 1, y + size - 1, SHRINE_DARK);
-        ctx.fill(x + size - 2, y + 2, x + size - 1, y + size - 1, SHRINE_DARK);
+        fill(ctx, x + 2, y + size - 2, x + size - 1, y + size - 1, SHRINE_DARK);
+        fill(ctx, x + size - 2, y + 2, x + size - 1, y + size - 1, SHRINE_DARK);
+    }
+
+    /** Overlay fill — always draws on top of vanilla HUD elements. */
+    private static void fill(DrawContext ctx, int x1, int y1, int x2, int y2, int color) {
+        ctx.fill(OVERLAY, x1, y1, x2, y2, color);
     }
 
     private static void drawRect(DrawContext ctx, int x, int y, int w, int h, int color) {
-        ctx.fill(x, y, x + w, y + h, color);
+        ctx.fill(OVERLAY, x, y, x + w, y + h, color);
     }
 }
