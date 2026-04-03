@@ -1,0 +1,23 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"gojo_domain_expansion_opening": {
+			"animation_length": 1.2917,
+			"bones": {
+				"body": {
+					"rotation": [0, 0, 0]
+				},
+				"right_arm": {
+					"rotation": {
+						"0.0": [-1.1259, 1.0573, 0.3059],
+						"0.7917": [-149.8001, -10.9138, 18.2337]
+					},
+					"position": {
+						"0.0": [0, 0, 0],
+						"0.7917": [0, -8, -3]
+					}
+				}
+			}
+		}
+	}
+}
