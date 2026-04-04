@@ -3,8 +3,12 @@ package net.mythic.jjkmod.domain;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -64,7 +68,10 @@ public class DomainExpansionManager {
         // 2. Move caster on top of the floor (floor is at center Y, caster stands on it)
         caster.requestTeleport(caster.getX(), center.getY() + 1.0, caster.getZ());
 
-        // 3. Freeze every non-caster player inside the sphere
+        // 3. Remove all mobs already inside the sphere
+        clearMobsInRange(world, center);
+
+        // 4. Freeze every non-caster player inside the sphere
         freezePlayersInRange(world, center, caster.getUuid(), domain);
 
         activeDomains.put(caster.getUuid(), domain);
@@ -102,6 +109,9 @@ public class DomainExpansionManager {
                     player.velocityModified = true;
                 }
             }
+
+            // Remove any mobs that spawned inside the domain
+            clearMobsInRange(world, domain.center);
 
             // Catch new players who walk/teleport into the sphere
             Vec3d cv = Vec3d.ofCenter(domain.center);
@@ -202,6 +212,31 @@ public class DomainExpansionManager {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    // ── Mob clearing ────────────────────────────────────────────────
+
+    /**
+     * Remove all non-player living entities (mobs) inside the domain sphere.
+     * Called on activation and every tick to prevent spawning inside.
+     */
+    private static void clearMobsInRange(ServerWorld world, BlockPos center) {
+        Vec3d cv = Vec3d.ofCenter(center);
+        var box = new net.minecraft.util.math.Box(
+                cv.x - RADIUS, cv.y - RADIUS, cv.z - RADIUS,
+                cv.x + RADIUS, cv.y + RADIUS, cv.z + RADIUS
+        );
+
+        List<MobEntity> mobs = world.getEntitiesByClass(
+                MobEntity.class, box,
+                EntityPredicates.VALID_ENTITY
+        );
+
+        for (MobEntity mob : mobs) {
+            if (mob.getPos().distanceTo(cv) <= RADIUS) {
+                mob.discard();  // silently remove — no drops, no death animation
             }
         }
     }
