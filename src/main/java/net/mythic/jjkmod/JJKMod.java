@@ -20,6 +20,7 @@ import net.mythic.jjkmod.networking.CharacterSelectedC2SPayload;
 import net.mythic.jjkmod.networking.DomainExpansionC2SPayload;
 import net.mythic.jjkmod.networking.GradeSelectedC2SPayload;
 import net.mythic.jjkmod.networking.ModNetworking;
+import net.mythic.jjkmod.sound.ModSounds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +35,10 @@ public class JJKMod implements ModInitializer {
 	public void onInitialize() {
 		LOGGER.info("Initializing JJK Mod - Cursed Energy System");
 
-		// Register items and creative tab
+		// Register items, creative tab, and sounds
 		ModItems.initialize();
 		ModItemGroups.initialize();
+		ModSounds.register();
 
 		// Register network payloads (S2C and C2S)
 		ModNetworking.registerS2CPayloads();
