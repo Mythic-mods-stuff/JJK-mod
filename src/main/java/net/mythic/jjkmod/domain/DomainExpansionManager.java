@@ -23,7 +23,7 @@ import java.util.*;
  * <ol>
  *   <li>A hollow sphere of black concrete (50-block diameter) is placed around the caster</li>
  *   <li>All existing terrain inside the sphere is cleared to air</li>
- *   <li>A flat floor plane of black concrete is placed at the caster's feet level</li>
+ *   <li>An invisible floor of barrier blocks is placed at the caster's feet level</li>
  *   <li>All non-caster players inside the sphere are frozen (no movement, mining, or combat)</li>
  *   <li>After 15 seconds the domain collapses and original terrain is restored</li>
  * </ol>
@@ -151,7 +151,7 @@ public class DomainExpansionManager {
 
     /**
      * Build the domain sphere: hollow shell of black concrete,
-     * interior cleared to air, equator floor plane of black concrete.
+     * interior cleared to air, invisible barrier-block floor at the equator.
      */
     private static void buildDomain(ServerWorld world, BlockPos center, ActiveDomain domain) {
         int r = RADIUS;
@@ -160,7 +160,8 @@ public class DomainExpansionManager {
         int worldTop = world.getTopY() - 1;
 
         BlockPos.Mutable pos = new BlockPos.Mutable();
-        BlockState blackConcrete = Blocks.BLACK_CONCRETE.getDefaultState();
+        BlockState shellBlock = Blocks.BLACK_CONCRETE.getDefaultState();
+        BlockState floorBlock = Blocks.BARRIER.getDefaultState();  // invisible floor
         BlockState air = Blocks.AIR.getDefaultState();
 
         for (int dx = -r; dx <= r; dx++) {
@@ -184,10 +185,15 @@ public class DomainExpansionManager {
                     boolean isShell = dist >= r - 0.5;          // sphere surface
                     boolean isFloor = (dy == 0) && !isShell;    // equator plane (inside shell)
 
-                    if (isShell || isFloor) {
-                        // Shell or floor → black concrete
+                    if (isShell) {
+                        // Sphere shell → black concrete (visible walls)
                         if (!original.isOf(Blocks.BLACK_CONCRETE)) {
-                            world.setBlockState(key, blackConcrete, Block.NOTIFY_LISTENERS);
+                            world.setBlockState(key, shellBlock, Block.NOTIFY_LISTENERS);
+                        }
+                    } else if (isFloor) {
+                        // Floor → barrier blocks (invisible, solid)
+                        if (!original.isOf(Blocks.BARRIER)) {
+                            world.setBlockState(key, floorBlock, Block.NOTIFY_LISTENERS);
                         }
                     } else {
                         // Interior → clear to air
