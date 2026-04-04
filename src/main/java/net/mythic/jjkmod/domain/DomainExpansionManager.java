@@ -13,10 +13,12 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.mythic.jjkmod.JJKMod;
+import net.mythic.jjkmod.sound.ModSounds;
 
 import java.util.*;
 
@@ -75,6 +77,11 @@ public class DomainExpansionManager {
         freezePlayersInRange(world, center, caster.getUuid(), domain);
 
         activeDomains.put(caster.getUuid(), domain);
+
+        // 5. Play domain expansion theme (audible to all players within range)
+        //    Volume 4.0 = ~64 block audible range, covers the entire domain
+        world.playSound(null, center, ModSounds.DOMAIN_EXPANSION_THEME,
+                SoundCategory.MASTER, 4.0f, 1.0f);
 
         JJKMod.LOGGER.info("[Domain] {} activated at {} — {} blocks saved, {} players frozen",
                 caster.getName().getString(), center,

@@ -1,0 +1,11 @@
+{
+  "domain_expansion_theme": {
+    "subtitle": "subtitles.jjk-mod.domain_expansion_theme",
+    "sounds": [
+      {
+        "name": "jjk-mod:domain_expansion_theme",
+        "stream": true
+      }
+    ]
+  }
+}
