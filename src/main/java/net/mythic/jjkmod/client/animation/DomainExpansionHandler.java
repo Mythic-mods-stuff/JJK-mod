@@ -3,13 +3,17 @@ package net.mythic.jjkmod.client.animation;
 import dev.kosmx.playerAnim.api.firstPerson.FirstPersonConfiguration;
 import dev.kosmx.playerAnim.api.firstPerson.FirstPersonMode;
 import dev.kosmx.playerAnim.api.layered.KeyframeAnimationPlayer;
+import dev.kosmx.playerAnim.api.layered.modifier.AbstractFadeModifier;
 import dev.kosmx.playerAnim.core.data.KeyframeAnimation;
+import dev.kosmx.playerAnim.core.util.Ease;
 import dev.kosmx.playerAnim.minecraftApi.PlayerAnimationRegistry;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.mythic.jjkmod.client.ClientCharacterData;
 import net.mythic.jjkmod.client.combat.CombatModeManager;
+import net.mythic.jjkmod.networking.DomainExpansionC2SPayload;
 
 /**
  * Handles domain expansion activation for the current character.
@@ -22,16 +26,19 @@ import net.mythic.jjkmod.client.combat.CombatModeManager;
  *   <li><b>Gojo</b> — "Unlimited Void" domain expansion pose</li>
  * </ul>
  *
- * Animations are loaded from {@code assets/jjk-mod/player_animation/} by
- * the Player Animator resource loader.
+ * <p>Player animation (arms) is handled by Player Animator.
+ * The domain barrier visual effect is a GeckoLib entity spawned server-side.
  */
 public class DomainExpansionHandler {
 
     private static final Identifier DOMAIN_ANIM_ID =
             Identifier.of("jjk-mod", "gojo_domain_expansion_opening");
 
+    /** Fade-in duration in ticks (5 ticks = 0.25 s). */
+    private static final int FADE_IN_TICKS = 5;
+
     /**
-     * Attempts to trigger the domain expansion animation.
+     * Attempts to trigger the domain expansion animation + barrier effect.
      * Only works when combat mode is active and the player is Gojo.
      *
      * @return true if the animation was triggered
@@ -48,7 +55,7 @@ public class DomainExpansionHandler {
             client.player.sendMessage(
                     Text.literal("\u00A7c[JJK] Domain expansion requires Gojo (current: "
                             + ClientCharacterData.get().getDisplayName() + ")"),
-                    true   // action bar (fades after ~2 s)
+                    true
             );
             return false;
         }
@@ -67,7 +74,7 @@ public class DomainExpansionHandler {
             return false;
         }
 
-        // Play the domain expansion animation with first-person support
+        // ── Player arm animation (Player Animator) ─────────────────
         KeyframeAnimationPlayer player = new KeyframeAnimationPlayer(anim);
         player.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
         player.setFirstPersonConfiguration(
@@ -77,7 +84,16 @@ public class DomainExpansionHandler {
                         .setShowRightItem(false)
                         .setShowLeftItem(false)
         );
-        animContainer.setAnimation(player);
+
+        // Smooth fade-in from idle pose
+        animContainer.replaceAnimationWithFade(
+                AbstractFadeModifier.standardFadeIn(FADE_IN_TICKS, Ease.INOUTSINE),
+                player
+        );
+
+        // ── Domain barrier entity (GeckoLib, server-spawned) ───────
+        ClientPlayNetworking.send(new DomainExpansionC2SPayload());
+
         return true;
     }
 }

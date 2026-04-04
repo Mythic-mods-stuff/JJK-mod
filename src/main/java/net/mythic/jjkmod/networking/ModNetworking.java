@@ -16,6 +16,7 @@ public class ModNetworking {
     public static void registerC2SPayloads() {
         PayloadTypeRegistry.playC2S().register(CharacterSelectedC2SPayload.ID, CharacterSelectedC2SPayload.CODEC);
         PayloadTypeRegistry.playC2S().register(GradeSelectedC2SPayload.ID, GradeSelectedC2SPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(DomainExpansionC2SPayload.ID, DomainExpansionC2SPayload.CODEC);
     }
 
     public static void syncCursedEnergy(ServerPlayerEntity player) {
