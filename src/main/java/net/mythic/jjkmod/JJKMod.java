@@ -13,9 +13,12 @@ import net.mythic.jjkmod.character.JJKCharacter;
 import net.mythic.jjkmod.character.JJKGrade;
 import net.mythic.jjkmod.command.TestCECommand;
 import net.mythic.jjkmod.energy.CursedEnergyManager;
+import net.mythic.jjkmod.entity.DomainBarrierEntity;
+import net.mythic.jjkmod.entity.ModEntities;
 import net.mythic.jjkmod.item.ModItemGroups;
 import net.mythic.jjkmod.item.ModItems;
 import net.mythic.jjkmod.networking.CharacterSelectedC2SPayload;
+import net.mythic.jjkmod.networking.DomainExpansionC2SPayload;
 import net.mythic.jjkmod.networking.GradeSelectedC2SPayload;
 import net.mythic.jjkmod.networking.ModNetworking;
 import org.slf4j.Logger;
@@ -35,6 +38,9 @@ public class JJKMod implements ModInitializer {
 		// Register items and creative tab
 		ModItems.initialize();
 		ModItemGroups.initialize();
+
+		// Register custom entities (GeckoLib barrier, etc.)
+		ModEntities.register();
 
 		// Register network payloads (S2C and C2S)
 		ModNetworking.registerS2CPayloads();
@@ -79,6 +85,26 @@ public class JJKMod implements ModInitializer {
 							character.getDisplayName(),
 							grade.getDisplayName());
 				}
+			});
+		});
+
+		// ── Domain expansion — spawn barrier entity on the server ───
+		ServerPlayNetworking.registerGlobalReceiver(DomainExpansionC2SPayload.ID, (payload, context) -> {
+			var player = context.player();
+			player.server.execute(() -> {
+				// Server-side validation: only Gojo can trigger
+				JJKCharacter character = CharacterSelectionManager.getSelectedCharacter(player);
+				if (character != JJKCharacter.GOJO) {
+					return;
+				}
+
+				DomainBarrierEntity barrier = new DomainBarrierEntity(
+						ModEntities.DOMAIN_BARRIER, player.getWorld());
+				barrier.setPosition(player.getPos());
+				player.getWorld().spawnEntity(barrier);
+
+				LOGGER.info("Player {} activated domain expansion at {}",
+						player.getName().getString(), player.getPos());
 			});
 		});
 

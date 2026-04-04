@@ -4,6 +4,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -11,8 +12,10 @@ import net.mythic.jjkmod.client.ClientCursedEnergyData;
 import net.mythic.jjkmod.client.CursedEnergyHudOverlay;
 import net.mythic.jjkmod.client.combat.CombatModeHud;
 import net.mythic.jjkmod.client.combat.CombatModeManager;
+import net.mythic.jjkmod.client.renderer.DomainBarrierRenderer;
 import net.mythic.jjkmod.client.screen.CharacterSelectionScreen;
 import net.mythic.jjkmod.client.screen.GradeSelectionScreen;
+import net.mythic.jjkmod.entity.ModEntities;
 import net.mythic.jjkmod.networking.CursedEnergySyncS2CPayload;
 import net.mythic.jjkmod.networking.OpenCharacterSelectionS2CPayload;
 import net.mythic.jjkmod.networking.OpenGradeSelectionS2CPayload;
@@ -34,6 +37,9 @@ public class JJKModClient implements ClientModInitializer {
 
         // NOTE: Domain expansion (key 9) is handled directly in HotbarKeyMixin
         // to avoid a key-binding conflict with the vanilla hotbar slot 9.
+
+        // ── Entity renderers (GeckoLib) ────────────────────────────────
+        EntityRendererRegistry.register(ModEntities.DOMAIN_BARRIER, DomainBarrierRenderer::new);
 
         // ── Network handlers ───────────────────────────────────────────
         ClientPlayNetworking.registerGlobalReceiver(CursedEnergySyncS2CPayload.ID, (payload, context) -> {
