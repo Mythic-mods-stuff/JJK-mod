@@ -26,8 +26,9 @@ import net.mythic.jjkmod.networking.DomainExpansionC2SPayload;
  *   <li><b>Gojo</b> — "Unlimited Void" domain expansion pose</li>
  * </ul>
  *
- * <p>Player animation (arms) is handled by Player Animator.
- * The domain barrier visual effect is a GeckoLib entity spawned server-side.
+ * <p>Player animation (arms) is handled client-side by Player Animator.
+ * The domain itself (black-concrete sphere, floor, player freeze) is
+ * created server-side by {@code DomainExpansionManager}.
  */
 public class DomainExpansionHandler {
 
@@ -38,7 +39,7 @@ public class DomainExpansionHandler {
     private static final int FADE_IN_TICKS = 5;
 
     /**
-     * Attempts to trigger the domain expansion animation + barrier effect.
+     * Attempts to trigger the domain expansion animation + server-side domain.
      * Only works when combat mode is active and the player is Gojo.
      *
      * @return true if the animation was triggered
@@ -91,7 +92,7 @@ public class DomainExpansionHandler {
                 player
         );
 
-        // ── Domain barrier entity (GeckoLib, server-spawned) ───────
+        // ── Domain expansion (server-side block sphere) ────────────
         ClientPlayNetworking.send(new DomainExpansionC2SPayload());
 
         return true;

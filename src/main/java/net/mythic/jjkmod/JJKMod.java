@@ -12,9 +12,8 @@ import net.mythic.jjkmod.character.GradeStatsManager;
 import net.mythic.jjkmod.character.JJKCharacter;
 import net.mythic.jjkmod.character.JJKGrade;
 import net.mythic.jjkmod.command.TestCECommand;
+import net.mythic.jjkmod.domain.DomainExpansionManager;
 import net.mythic.jjkmod.energy.CursedEnergyManager;
-import net.mythic.jjkmod.entity.DomainBarrierEntity;
-import net.mythic.jjkmod.entity.ModEntities;
 import net.mythic.jjkmod.item.ModItemGroups;
 import net.mythic.jjkmod.item.ModItems;
 import net.mythic.jjkmod.networking.CharacterSelectedC2SPayload;
@@ -38,9 +37,6 @@ public class JJKMod implements ModInitializer {
 		// Register items and creative tab
 		ModItems.initialize();
 		ModItemGroups.initialize();
-
-		// Register custom entities (GeckoLib barrier, etc.)
-		ModEntities.register();
 
 		// Register network payloads (S2C and C2S)
 		ModNetworking.registerS2CPayloads();
@@ -88,7 +84,7 @@ public class JJKMod implements ModInitializer {
 			});
 		});
 
-		// ── Domain expansion — spawn barrier entity on the server ───
+		// ── Domain expansion — block-based sphere ─────────────────────
 		ServerPlayNetworking.registerGlobalReceiver(DomainExpansionC2SPayload.ID, (payload, context) -> {
 			var player = context.player();
 			player.server.execute(() -> {
@@ -98,13 +94,8 @@ public class JJKMod implements ModInitializer {
 					return;
 				}
 
-				DomainBarrierEntity barrier = new DomainBarrierEntity(
-						ModEntities.DOMAIN_BARRIER, player.getWorld());
-				barrier.setPosition(player.getPos());
-				player.getWorld().spawnEntity(barrier);
-
-				LOGGER.info("Player {} activated domain expansion at {}",
-						player.getName().getString(), player.getPos());
+				// Activate the block-based domain expansion
+				DomainExpansionManager.activateDomain(player);
 			});
 		});
 
@@ -146,16 +137,26 @@ public class JJKMod implements ModInitializer {
 		});
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			// Collapse any active domain when the caster disconnects
+			DomainExpansionManager.collapseForPlayer(handler.getPlayer().getUuid(), server);
+
 			GradeStatsManager.removeGradeStats(handler.getPlayer());
 			CursedEnergyManager.remove(handler.getPlayer());
 		});
 
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+			// Collapse all domains and restore terrain before shutting down
+			DomainExpansionManager.collapseAll(server);
+
 			CharacterSelectionManager.clearAll();
 			LOGGER.info("Server stopping - cleared all character selections and grades");
 		});
 
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			// Tick active domain expansions (freeze players, check expiry)
+			DomainExpansionManager.tick(server);
+
+			// Cursed energy regeneration
 			syncTickCounter++;
 			if (syncTickCounter >= CursedEnergyManager.DEFAULT_CURSED_ENERGY_REGENERATION_RATE) {
 				syncTickCounter = 0;

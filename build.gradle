@@ -20,13 +20,6 @@ repositories {
 		name "KosmX's Maven"
 		url 'https://maven.kosmx.dev/'
 	}
-	maven {
-		name 'GeckoLib'
-		url 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
-		content {
-			includeGroup("software.bernie.geckolib")
-		}
-	}
 }
 
 fabricApi {
@@ -46,9 +39,6 @@ dependencies {
 
 	// Player Animator — custom player animation library (KosmX)
 	include modImplementation("dev.kosmx.player-anim:player-animation-lib-fabric:${project.player_anim}")
-
-	// GeckoLib — entity animation & rendering engine
-	modImplementation "software.bernie.geckolib:geckolib-fabric-${project.minecraft_version}:${project.geckolib_version}"
 }
 
 processResources {
