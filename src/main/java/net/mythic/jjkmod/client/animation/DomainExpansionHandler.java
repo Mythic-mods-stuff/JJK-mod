@@ -65,7 +65,7 @@ public class DomainExpansionHandler {
         var animContainer = ((IJJKAnimatedPlayer) client.player).jjkmod_getAnimationLayer();
 
         // Load the animation from resources
-        KeyframeAnimation anim = PlayerAnimationRegistry.getAnimation(DOMAIN_ANIM_ID);
+        KeyframeAnimation anim = (KeyframeAnimation) PlayerAnimationRegistry.getAnimation(DOMAIN_ANIM_ID);
         if (anim == null) {
             client.player.sendMessage(
                     Text.literal("\u00A7c[JJK] Animation not found: " + DOMAIN_ANIM_ID
